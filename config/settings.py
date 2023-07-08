@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'kitchen',
     'service',
     'order',
+    "outputs",
     'ombor',
 ]
 
