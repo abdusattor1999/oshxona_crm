@@ -11,8 +11,9 @@ SECRET_KEY = 'django-insecure-_e5stg4^r=b&ol^8=lktmr6@-ud$tiq2kx9xy06jayttu6j=e&
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+AUTH_USER_MODEL = 'accounts.User'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -27,6 +28,7 @@ INSTALLED_APPS = [
     # Tashqi
     'rest_framework',
     'rest_framework_simplejwt',
+    'drf_yasg',
 
     # Ichki
     'accounts',
@@ -46,9 +48,10 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=10),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
 }
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

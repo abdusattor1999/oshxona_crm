@@ -1,6 +1,12 @@
 # oshxona_crm
-Ro'yxatdan o'tish tizimi 'accounts' appida bo'ladi user model CRUD
-Kitchen , KitchenUnit , Worker lar kitchen appida bo'ladi hamma narsasi
-Meal , Table va Bron modellari serivice appida bo'ladi
-Product , Output , OutputItem modellari omborda bo'ladi Ombor modeli ham
-Order , OrderItem lar order modelida bo'ladi
+Ro'yxatdan o'tish tizimi , Worker, Kitchen lar "accounts" appida bo'ladi.
+
+Meal va KitchenUnit lar hamma narsasi "kitchen" appida bo'ladi. 
+
+Table va Bron modellari "serivice" appida bo'ladi.
+
+Output , OutputItem va Ombor modellari "outputs" da bo'ladi.
+
+Order , OrderItem lar "orders" appida bo'ladi
+
+Product , Ombor lar "ombor" da bo'ladi.
