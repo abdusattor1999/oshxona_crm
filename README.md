@@ -10,3 +10,6 @@ Output , OutputItem va Ombor modellari "outputs" da bo'ladi.
 Order , OrderItem lar "order" appida bo'ladi
 
 Product , Ombor lar "ombor" da bo'ladi.
+
+
+
