@@ -9,7 +9,7 @@ from django.contrib.auth.models import update_last_login
 from django.utils.translation import gettext_lazy as _
 from rest_framework import exceptions
 
-
+#  ====================== User starts =====================================
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -19,7 +19,8 @@ class UserSerializer(serializers.ModelSerializer):
         return super().validate(attrs)
 
     def create(self, validated_data):
-        return super().create(validated_data)
+        user = User.objects.create_user(**validated_data)
+        return user
     
 
 class LoginSerializer(TokenObtainSerializer):
@@ -48,16 +49,15 @@ class LoginSerializer(TokenObtainSerializer):
                 self.error_messages['no_active_account'],
                 'no_active_account',
             )
-
         return {}
     
     def validate(self, attrs):
         data = self.validate_user(attrs=attrs)
         refresh = self.get_token(self.user)
 
-        data['refresh'] = str(refresh)
-        data['access'] = str(refresh.access_token)
         data['id'] = str(self.user.id)
+        data['access'] = str(refresh.access_token)
+        data['refresh'] = str(refresh)
 
         if api_settings.UPDATE_LAST_LOGIN:
             update_last_login(None, self.user)
@@ -81,7 +81,6 @@ class LogoutSerializer(serializers.Serializer):
     def save(self, **kwargs):
         try:
             RefreshToken(self.token).blacklist()
-
         except TokenError:
             self.fail("bad_token")
 
@@ -95,3 +94,15 @@ class DeleteUserSerilizer(serializers.ModelSerializer):
 class ChangePhoneSerializer(serializers.Serializer):
     phone = serializers.CharField(max_length=13)
     new_phone = serializers.CharField(max_length=13)
+
+# =========================== User ends ==============================================
+
+class WorkerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Worker
+        fields = "name", "surname", "phone", "password", "salary", "oshxona", "position", "percentage"
+
+
+    def create(self, validated_data):
+        worker = Worker.objects.create_user(**validated_data)
+        return worker

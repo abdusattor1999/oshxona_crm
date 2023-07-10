@@ -44,12 +44,12 @@ class Position(models.Model):
     def __str__(self):
         return self.name
 
-
+    
 class Worker(User):
     name = models.CharField(max_length=30, verbose_name='Ism')
     surname = models.CharField(max_length=30, verbose_name='Familiya')
     slug = AutoSlugField(populate_from='name', unique_with=('oshxona', 'created'))
-    salary = models.DecimalField(max_digits=9, decimal_places=2, verbose_name='Maosh')
+    salary = models.DecimalField(blank=True, null=True, max_digits=9, decimal_places=2, verbose_name='Maosh (ixtiyoriy)')
     oshxona = models.ForeignKey(Kitchen, on_delete=models.CASCADE, verbose_name='Oshxona')
     position = models.ForeignKey(Position , on_delete=models.SET_NULL, null=True, verbose_name="Lavozimi")
     percentage = models.PositiveIntegerField(blank=True, null=True, verbose_name="Ulush Foizda (ixtiyoriy)")

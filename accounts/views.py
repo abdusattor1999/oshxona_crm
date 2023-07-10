@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from rest_framework.response import Response
 from .serializers import *
 from rest_framework.views import APIView
@@ -21,7 +20,6 @@ class SignupView(APIView):
                 "message": "Telefon raqami to'g'ri kiritilmadi."
             }
             raise ValidationError(data)
-        print('Validatsiya Muvaffaqiyatli !')
         return True
     
     def validate_password(self, password):
@@ -48,7 +46,9 @@ class SignupView(APIView):
         self.validate_password(password=password)
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        user = User.objects.create_user(**serializer.validated_data)
+        user.is_active = True
+        user.save()
 
         data = {
             'success': True,
@@ -64,7 +64,7 @@ class LoginView(TokenViewBase):
 
 class LoguotView(generics.GenericAPIView):
     serializer_class = LogoutSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = IsAuthenticated,
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
@@ -75,7 +75,8 @@ class LoguotView(generics.GenericAPIView):
 
 
 class ChangePhoneView(APIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = IsAuthenticated,
+    serializer_class = ChangePhoneSerializer
 
     def validate_phone_number(self, phone):
         pattern = re.compile(
@@ -99,3 +100,17 @@ class ChangePhoneView(APIView):
             return Response({"success": True, 'message': "Telefon Raqam yangiandi"}, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# =============================================================================================================
+
+class WorkerCreateView(APIView):
+    serializer_class = WorkerSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        # worker = Worker.objects.create_user(**serializer.validated_data)
+        # worker.save()
+        return Response({'success':True, 'message':"Ishchi yaratish muvaffaqiyatli amalga oshirildi."})
+    
