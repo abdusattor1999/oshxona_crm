@@ -73,7 +73,6 @@ class LoguotView(generics.GenericAPIView):
 
         return Response({"success": True, "message": "Tizimdan chiqish muvaffaqiyatli !"}, status=status.HTTP_204_NO_CONTENT)
 
-
 class ChangePhoneView(APIView):
     permission_classes = IsAuthenticated,
     serializer_class = ChangePhoneSerializer
@@ -87,19 +86,68 @@ class ChangePhoneView(APIView):
                 "message": "Yangi telefon raqami to'g'ri kiritilmadi."
             }
             raise ValidationError(data)
-        print('Validatsiya Muvaffaqiyatli !')
         return True
 
-    def patch(self, request):
+    def post(self, request):
         serializer = ChangePhoneSerializer(data=request.data)
         if serializer.is_valid():
-            user = self.request.user
-            phone = serializer.validated_data['new_phone']
-            self.validate_phone_number(phone)
-            user.edit_phone()
-            return Response({"success": True, 'message': "Telefon Raqam yangiandi"}, status=status.HTTP_200_OK)
+            user = User.objects.filter(phone=serializer.validated_data['phone'])
+            if user.exists():
+                user = user.last()
+                phone = serializer.validated_data['new_phone']
+                self.validate_phone_number(phone)
+                user.phone = phone
+                user.save()
+                return Response({"success": True, 'message': "Telefon Raqam yangiandi"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"success":False, "message":"Berilgan raqamdagi foydalanuvchi topilmadi"})
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ChangePasswordView(generics.UpdateAPIView):
+    serializer_class = ChangePasswordSerializer
+    permission_classes = IsAuthenticated,
+    model = User
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        if serializer.is_valid():
+            user = User.objects.get(phone=serializer.data.get('phone', ''))
+            if not user.check_password(serializer.data.get("old_password")):
+                return Response({"success": False, "message": "Eski parol noto'g'ri kiritildi. Tekshirib qaytadan kiriting !"}, status=status.HTTP_400_BAD_REQUEST)
+
+            user.set_password(serializer.data.get("new_password"))
+            user.save()
+            response = {
+                'success': True,
+                'message': 'Parol yangilash muvaffaqiyatli bajarildi',
+                'status': status.HTTP_200_OK,
+            }
+
+            return Response(response)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+# =============================================================================================================
+class KitchenApiView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = IsAuthenticated,
+    serializer_class = KitchenEditSerializer
+    queryset = Kitchen.objects.all()
+
+    
+
+    def patch(self, request, *args, **kwargs):
+        self.partial_update(request, *args, **kwargs)
+        return Response({"success":True, "message":"Oshxona malumotlari yangilandi"})
+
+
+    def delete(self, request, *args, **kwargs):
+        self.destroy(request, *args, **kwargs)
+        return Response({"success":True, "message":"Oshxona o'chirildi"})
 
 # =============================================================================================================
 
@@ -109,8 +157,23 @@ class WorkerCreateView(APIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        # worker = Worker.objects.create_user(**serializer.validated_data)
-        # worker.save()
+        # serializer.save()
+        worker = Worker.objects.create_user(**serializer.validated_data)
+        worker.save()
         return Response({'success':True, 'message':"Ishchi yaratish muvaffaqiyatli amalga oshirildi."})
     
+
+class WorkerAPIView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = WorkerEditSerializer
+    queryset = Worker.objects.all()
+    
+
+    def patch(self, request, *args, **kwargs):
+        self.partial_update(request, *args, **kwargs)
+        return Response({"success":True, "message":"Profil malumotlari yangilandi"})
+
+
+    def delete(self, request, *args, **kwargs):
+        self.destroy(request, *args, **kwargs)
+        return Response({"success":True, "message":"Profil o'chirildi"})

@@ -14,6 +14,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("id", 'phone', 'password')
+        write_only_fields = 'password',
 
     def validate(self, attrs):
         return super().validate(attrs)
@@ -95,14 +96,69 @@ class ChangePhoneSerializer(serializers.Serializer):
     phone = serializers.CharField(max_length=13)
     new_phone = serializers.CharField(max_length=13)
 
-# =========================== User ends ==============================================
 
+class ChangePasswordSerializer(serializers.Serializer):
+    phone = serializers.CharField(required=True)
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+    
+    class Meta:
+        model = User
+
+    def validate(self, attrs): 
+        katta = False
+        kichik = False
+        belgi = False
+        raqam = False
+
+        new_pass = attrs['new_password']
+        belgilar = ("." , "_" , "*" , "-" , "$" , "#")
+        for i in new_pass:
+            if 64 < ord(i) < 91:
+                katta = True
+            elif 96 < ord(i) < 123:
+                kichik = True
+            elif i in belgilar:
+                belgi = True
+            elif 47 < ord(i) < 58:
+                raqam = True
+        if len(new_pass) < 8:
+            raise serializers.ValidationError({"success":False, "message":"Parol 8 ta raqamdan kam bo'lmasligi kerak"})
+        elif katta+kichik+belgi+raqam < 2:
+            raise serializers.ValidationError({"success":False, "message":f"Parol xavfsizlik talabiga javob bermaydi katta va kichik harflar yoki {belgilar} belgilaridan foydalaning"})
+
+        return attrs
+    
+
+# ============= User ends  ->  Oshxona starts =============================================
+
+class KitchenEditSerializer(serializers.ModelSerializer):
+    user = UserSerializer
+    class Meta:
+        model = Kitchen
+        fields = 'id', 'name','user', 'image', 'description', 'status', 'created'
+        read_only_fields = 'id','user','created'
+
+
+# ============= Oshxona ends  ->  Worker starts ===========================================
 class WorkerSerializer(serializers.ModelSerializer):
+    oshxona = KitchenEditSerializer()
     class Meta:
         model = Worker
-        fields = "name", "surname", "phone", "password", "salary", "oshxona", "position", "percentage"
-
+        fields = 'id', "name", "surname", "phone", "password", "salary", "oshxona", "position", "percentage"
+        read_only_fields = 'id',
+        write_only_fields = 'password',
 
     def create(self, validated_data):
         worker = Worker.objects.create_user(**validated_data)
         return worker
+    
+    def update(self, instance, validated_data):
+        return super().update(instance, validated_data)
+    
+class WorkerEditSerializer(serializers.ModelSerializer):
+    oshxona = KitchenEditSerializer()
+    class Meta:
+        model = Worker
+        fields = 'id', "name", "surname", "phone", "salary", "oshxona", "position", "percentage"
+        read_only_fields = 'id',
