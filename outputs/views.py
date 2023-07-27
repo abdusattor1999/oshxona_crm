@@ -24,40 +24,37 @@ class OutputViewset(ModelViewSet):
         output.save()
         return Response({"success":True, "message":"Chiqim muvaffaqiyatli saqlandi"})
 
+    def partial_update(self, request, *args, **kwargs):
+        # 1 Umumiy Output malumotlarini yangilash ✔️
+        # 2 OutputItem malumotlarini yangilash  ✔️
+        # 3 Yangi OutputItem qo'shish ✔️
 
-    # def retrieve(self, request, *args, **kwargs):
-    #     output = Output.objects.filter(id=kwargs.get('pk', None))
-    #     if output.exists():
-    #         out = output.last()
-    #         returning = [
+        output = Output.objects.get(id=kwargs['pk'])
+        items = request.data.pop('items', False)
+        if items:
+            for item in items:
+                object = OutputItem.objects.filter(id=item.pop('id', None))
+                if object.exists():
+                    object = object.last()
+                    if object.output == output:
+                        for key, value in item.items():
+                            setattr(object, key, value)
+                        object.save()
+                else:
+                    object = OutputItem.objects.create(**item)
+                    object.output = output
+                    object.save()
 
-    #         ]
-    #         print(returning)
-    #         # output_items = OutputItem.objects.filter(output=out)
-    #         # if output_items.exists():
-    #         #     items = []
-    #         #     for item in output_items:
-    #         #         items.append(serialize('json', [item]))
-    #         #     returning['items'] = items  
-    #         return Response(returning)  
-    #     return Response({"success":False, "message":"Berilgan id raqam bo'yicha xarajat mavjud emas !"})
+        super().partial_update(request, *args, **kwargs)
+        return Response({"success":True, "message":"Chiqim malumotlari yangilandi"})
+
+    def retrieve(self, request, *args, **kwargs):
+        object = Output.objects.filter(id=kwargs.get('pk', None))
+        if object.exists():
+            return super().retrieve(request, *args, **kwargs)
+        else:
+            return Response({"success":False, "message":"Bunday chiqim malumotlari mavjud emas !"})
     
-# class OutputItemViewset(ModelViewSet):
-#     serializer_class = OutputItemSerializer
-#     permission_classes = IsAuthenticated,
-#     queryset = OutputItem.objects.all()
-
-#     def create(self, request, *args, **kwargs):
-#         output = Output.objects.filter(id=self.request.data.get('output_id', None))
-#         print("23", request.data)
-#         serializer = self.serializer_class(data=request.data)
-#         serializer.is_valid()
-#         if output.exists():
-#             print(serializer.validated_data)
-#             object = OutputItem.objects.create(**serializer.validated_data)
-#             object.output = output.last()
-#             object.save()
-#             return Response({"success":True, 'message':"Obyekt muvaffaqiyatli yasaldi"})
-#         raise ValueError({"success":False, "message":"Output kiritilmadi"})
-
-    
+    def destroy(self, request, *args, **kwargs):
+        super().destroy(request, *args, **kwargs)
+        return Response({"success":True, "message":"Chiqim malumotlari o'chirildi"})
